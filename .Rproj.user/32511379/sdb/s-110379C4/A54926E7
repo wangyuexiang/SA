@@ -1,0 +1,17 @@
+{
+    "contents" : "---\ntitle: \"Kmeans\"\nauthor: \"WANG Yuexiang\"\ndate: \"23 juillet 2015\"\noutput: html_document\n---\n\n\n## Kmeans \n```{r, cache = TRUE, fig.width = 10, fig.height = 5, warning = FALSE}\nggplot(train) + geom_point(aes(Date, TimeSor, shape = as.factor(DOW)))\nggplot(train) + geom_point(aes(Date, TimeSor, shape = as.factor(DOW))) + facet_wrap(~ID)\n\nfor(i in 1:nrow(ID.list)){\n  temp <- train %>% filter(ID == ID.list$ID[i])\n  set.seed(1234)\n  t.kmeans <- lapply(1:6, function(i){\n    kmeans(temp[, \"TimeSor\"], centers = i)\n  })\n  \n  print(ID.list$ID[i])\n  print(lapply(t.kmeans, function(z) z$withinss))\n  within.ss <- sapply(t.kmeans, function(z) sum(z$withinss))\n  plot(1:6, type=\"b\", xlab = paste0(\"Number of clusters for:\", ID.list$ID[i]), ylab = \"Within SS\", within.ss)\n\n  clus<- clusGap(temp[,\"TimeSor\"], kmeans, 10)\n  print(clus)\n  plot(clus)\n}\n```\n\n## Nb of Clusters from 1 to 6\n```{r, cache = TRUE, fig.width = 14, fig.height = 5, warning = FALSE}\nset.seed(1234)\nfor (i in 1:6){\n  cl1 <- kmeans(train[, \"TimeSor\"], i)\n  centers1 <- as.data.frame(cl1$centers)\n  centers1$cluster <- seq(1:i)\n  \n  gg1 <- ggplot(train) +\n    geom_point(aes(Date, TimeSor, col = as.factor(cl1$cluster), shape = as.factor(DOW))) +\n    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers1) \n\n  cl2 <- kmeans(train[, c(\"DOW\",\"TimeSor\")], i)\n  centers2 <- as.data.frame(cl2$centers)\n  centers2$cluster <- seq(1:i)\n \n  gg2 <- ggplot(train) +\n    geom_point(aes(Date, TimeSor, col = as.factor(cl2$cluster), shape = as.factor(DOW))) +\n    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers2)\n  \n  grid.arrange(gg1, gg2, ncol = 2)\n  \n  cat(\"Cluster by TimeSor: \", cl1$size, \"\\n\")\n  cat(\"Cluster by TimeSor & DOW: \", cl2$size)\n} \n```\n\n\n## Decomposer: Nb of Clusters from 1 to 6\n```{r, cache = TRUE, fig.width = 14, fig.height = 5, warning = FALSE}\nset.seed(1234)\nfor (i in 1:6){\n  cl1 <- kmeans(train_decompose[, \"TimeSor\"], i)\n  centers1 <- as.data.frame(cl1$centers)\n  centers1$cluster <- seq(1:i)\n  names(centers1)[1] <- \"TimeSor\"\n  \n  gg1 <- ggplot(train_decompose) +\n    geom_point(aes(Date, TimeSor, col = as.factor(cl1$cluster), shape = as.factor(DOW))) +\n    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers1) \n\n  cl2 <- kmeans(train_decompose[, c(\"DOW\",\"TimeSor\")], i)\n  centers2 <- as.data.frame(cl2$centers)\n  centers2$cluster <- seq(1:i)\n \n  gg2 <- ggplot(train_decompose) +\n    geom_point(aes(Date, TimeSor, col = as.factor(cl2$cluster), shape = as.factor(DOW))) +\n    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers2)\n  \n  grid.arrange(gg1, gg2, ncol = 2)\n  \n  cat(\"Cluster by TimeSor: \", cl1$size, \"\\n\")\n  cat(\"Cluster by TimeSor & DOW: \", cl2$size)\n} \n```\n\n",
+    "created" : 1438174269053.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3511962045",
+    "id" : "A54926E7",
+    "lastKnownWriteTime" : 1438253889,
+    "path" : "~/Downloads/Vinci R/VA1/SA_end2end_Kmeans.Rmd",
+    "project_path" : "SA_end2end_Kmeans.Rmd",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "type" : "r_markdown"
+}

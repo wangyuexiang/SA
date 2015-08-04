@@ -1,0 +1,18 @@
+{
+    "contents" : "---\ntitle: \"SA_CC\"\nauthor: \"Yuexiang Wang\"\ndate: \"30 July, 2015\"\noutput: html_document\n---\n\n# Models Results\n\n## CC\n\n```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}\nCC <- trx %>% filter(ID == \"CC\")\nCC.list <- CC %>% group_by(Entr, Sor) %>% summarise(n = n()) %>% ungroup() %>% arrange(desc(n)) %>% slice(1:4)\n#CC.list$order <- seq(1,4)\nCC.list$order <- c(\"Retour: Lan-Av\", \"Aller: Av-Lan\", \"Aller: Bar-Fre\", \"Retour: Fre-Bar\")\n\nCC.hot <- inner_join(CC, CC.list)\n\nprint(CC.list)\nggplot(CC.hot) + geom_point(aes(Date, TimeSor, col = as.factor(order))) + ggtitle(\"Date ~ TimeSor\")\nggplot(CC.hot) + geom_bar(aes(DOW), binwidth = 1) + facet_wrap(~order) + ggtitle(\"Distribution by DOW\")\nggplot(CC.hot) + geom_tile(aes(Date, DOW, fill = as.factor(DOW))) + facet_wrap(~order)\n```\n\n\n## Original points\n```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}\nggplot() +\n\tgeom_point(data = train, aes(Date, TimeSor, col = \"train\", shape = as.factor(DOW))) +\n\tgeom_point(data = test, aes(Date, TimeSor, col = \"test\", shape = as.factor(DOW))) +\n  facet_wrap(~ID) \n```\n\n## Result Time Interval by DOW\n```{r, echo = FALSE, cache = TRUE, fig.width = 16, fig.height = 8, warning = FALSE}\nggplot(result) + \n  geom_point(aes(DOW, Tmin, col = \"Tmin\")) +  \n  geom_point(aes(DOW, Tmax, col = \"Tmax\")) +\n  geom_segment(aes(x=DOW, xend=DOW, y=Tmin, yend=Tmax)) +\n  facet_grid(ID~Model) + ggtitle(\"Result: Time Interval by DOW\")\n```\n\n## Result Geo-representation\n```{r, echo = FALSE, cache = TRUE, fig.width = 16, fig.height = 8, warning = FALSE}\nggplot(result.LngLat) +  \n  geom_point(aes(ELng, ELat, col = \"Entr\")) +\n  geom_point(aes(SLng, SLat, col = \"Sor\")) +\n  geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) + \n#\tgeom_point(data = gares %>% filter(Societe %in% c(4,6)), aes(Lat, Lng, col = as.factor(Societe))) +\n  facet_grid(ID~Model) + ggtitle(\"Result: Geo-representation\")\n```\n\n## Result Geo-representation for CC\n```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 8, warning = FALSE}\nggplot(result.LngLat %>% filter(ID == \"CC\")) +\n  geom_point(aes(ELng, ELat, col = \"Entr\")) + \n  geom_point(aes(SLng, SLat, col = \"Sor\")) + \n  geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) + \n#\tgeom_point(data = gares %>% filter(Societe %in% c(4,6)), aes(Lat, Lng, col = as.factor(Societe))) +\n  facet_grid(DOW~Model) + ggtitle(\"Result: Geo-representation by DOW\")\n```\n\n\n## Result of CC in details\n```{r, cache = TRUE, fig.width = 10, fig.height = 8, warning = FALSE}\nprint(Ind, n = 24)\nInd.result\nprint(result.final %>% filter(ID == \"CC\"), n = 100) \n```",
+    "created" : 1438253895934.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2919478719",
+    "id" : "936FB36",
+    "lastKnownWriteTime" : 1438353301,
+    "path" : "~/Downloads/Vinci R/VA1/SA_CC.Rmd",
+    "project_path" : "SA_CC.Rmd",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "type" : "r_markdown"
+}

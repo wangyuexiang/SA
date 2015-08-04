@@ -1,0 +1,18 @@
+{
+    "contents" : "\n# remove unuseful data set after Rmd\nrm(centers1, centers2, cl1, cl2, gg1, gg2, within.ss, t.kmeans)\n\n\n##########\n# viz: test result\nggplot(test_decompose) + geom_point(aes(Date, TimeSor, col = as.factor(result))) + facet_wrap(~ID) + ggtitle(\"Test Result\")\n\ntemp <- train_decompose\ntemp$result <- 0\nfor (i in 1:nrow(result)){\n  temp[\n    temp$ID   == result$ID[i] &\n      temp$Entr == result$Entr[i]&\n      temp$Sor  == result$Sor[i]&\n      temp$DOW  == result$DOW[i]&\n      temp$TimeSor >= result$Tmin[i]&\n      temp$TimeSor <= result$Tmax[i],\n    \"result\"]<-1\n}\n##########\n# viz: train result\nggplot(temp) + geom_point(aes(Date, TimeSor, col = as.factor(result))) + facet_wrap(~ID) + ggtitle(\"Train Result\")\nggplot(VIP2) + geom_point(aes(Date, TimeSor)) + facet_wrap(~ID) + ggtitle(\"VIP2\")\n\n\n##########\n# viz: result\nggplot(result) + \n  geom_point(aes(DOW, Tmin, col = \"Tmin\")) +\n  geom_point(aes(DOW, Tmax, col = \"Tmax\")) +\n  geom_segment(aes(x=DOW, xend=DOW, y=Tmin, yend=Tmax)) +\n  facet_wrap(~ID) + ggtitle(\"Result: Time Interval by DOW\")\n\n\n\n\n\n\n\n\n\n##########\n# get Ind3\n\ntest.period <- data.frame(Date = seq(as.Date(\"2015-5-1\"), as.Date(\"2015-5-28\"), \"day\"))\ntest.period$DOW <- as.POSIXlt(test.period$Date)$wday\n\nresult$DOW <- as.numeric(result$DOW)\ntemp <- inner_join(test.period, result[,-(5:6)], by=\"DOW\")\ntemp$Mark <- 0\ntemp$DOW <- as.character(temp$DOW)\n# for(i in 1:nrow(test_decompose)){\n#   temp[\n#     temp$ID   == test_decompose$ID[i] &&\n#     temp$Entr == test_decompose$Entr[i &&\n#     temp$Sor  == test_decompose$Sor[i]&&\n#     temp$DOW  == test_decompose$DOW[i]&&\n#     temp$Tmin <= test_decompose$TimeSor[i]&&\n#     temp$Tmax >= test_decompose$TimeSor[i],\n#   \n#     \"Mark\"]<-1\n# }\n# count(temp,Mark)\n\n\nfor(i in 1:nrow(temp)){\n  for(j in 1:nrow(test_decompose)){\n    if(temp$ID[i]   == test_decompose$ID[j] &\n       temp$Entr[i] == test_decompose$Entr[j] &\n       temp$Sor[i]  == test_decompose$Sor[j] &\n       temp$Date[i] == test_decompose$Date[j] &\n       temp$TimeSor[i] >= test_decompose$Tmin[j] &\n       temp$TimeSor[i] <= test_decompose$Tmax[j]) {\n      temp$Mark[i] <- temp$Mark[i] + 1\n      break # end for loop\n    } # next trx in real\n  } # next trx predicted\n}\n\n\ntemp.ind <- temp %>%\n  filter(Mark == 0)\ngroup_by(ID) %>%\n  summarize(Fpos = n())\n\n\n",
+    "created" : 1437751978974.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "52314114",
+    "id" : "B8DB8D21",
+    "lastKnownWriteTime" : 1437753200,
+    "path" : "~/RStudio_Default_Working_Directory/TS/VA1/SA_otherActions.R",
+    "project_path" : "SA_otherActions.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

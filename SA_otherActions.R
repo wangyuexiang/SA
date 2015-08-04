@@ -6,6 +6,7 @@
 # load("Troncons_A8.RData")
 # load("Troncons_A9.RData")
 # gares <- read.table("garesLatLng.csv", header = T, sep = ",")
+# load("MODELE.RData")
 
 # remove unuseful data set after Rmd
 rm(centers1, centers2, cl1, cl2, gg1, gg2, within.ss, t.kmeans)
@@ -28,6 +29,20 @@ ggplot(train_decompose.LngLat) +
   geom_point(aes(SLng, SLat, col = "Sor")) +
   geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) 
 
+
+##########
+# viz Ind
+
+ggplot(Ind) + 
+	geom_point(aes(Model, Ind1, col = as.factor(ID))) + 
+	geom_point(aes(Model, Ind2, col = as.factor(ID))) + 
+	geom_point(aes(Model, Ind3, col = as.factor(ID))) 
+
+ggplot(Ind) + 
+  geom_point(aes(Model, Ind1, col = "Ind1")) + 
+  geom_point(aes(Model, Ind2, col = "Ind2")) + 
+  geom_point(aes(Model, Ind3, col = "Ind3")) +
+  facet_wrap(~ID)
 
 
 

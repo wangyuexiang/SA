@@ -156,6 +156,10 @@ trx <- tbl_df(VIP2 %>%
 trx <- trx[, -c(9:13)]
 trx <- trx %>% filter(DOW < 7)
 
+# ??? add PM into trx
+temp <- input.ASF %>% filter(Date >= train.start & Date < test.end)
+trx <- rbind(trx, temp)
+
 # construct train & test set
 train <- trx %>% filter(Date < test.start)
 test <- trx %>% filter(Date >= test.start)
@@ -490,9 +494,6 @@ result.model.12$Model <- 12
 test.model.12 <- GetResult(test_decompose, result.model.12)
 ind.model.12 <- GetInd(test.model.12, result.model.12)
 ind.model.12$Model <- 12
-
-
-
 
 ####################
 ####################

@@ -14,8 +14,27 @@ rm(T.matin, T.aprem)
 rm(i,j,clus)
 rm(T, temp)
 ##########
-### CC
 
+##########
+### PM
+input.ASF %>% group_by(ID) %>% summarize(minD = min(Date), maxD = max(Date), n = n())
+
+
+
+
+
+
+
+
+full_join(count(Input, ID), ID.ref)
+print(full_join(count(Input, ID), ID.ref), n = 21)
+
+
+
+
+
+##########
+### CC
 train_decompose.LngLat <- GetLngLat(train_decompose)
 
 ggplot(train_decompose.LngLat) + 
@@ -32,17 +51,18 @@ ggplot(train_decompose.LngLat) +
 
 ##########
 # viz Ind
-
 ggplot(Ind) + 
 	geom_point(aes(Model, Ind1, col = as.factor(ID))) + 
 	geom_point(aes(Model, Ind2, col = as.factor(ID))) + 
 	geom_point(aes(Model, Ind3, col = as.factor(ID))) 
 
 ggplot(Ind) + 
-  geom_point(aes(Model, Ind1, col = "Ind1")) + 
-  geom_point(aes(Model, Ind2, col = "Ind2")) + 
-  geom_point(aes(Model, Ind3, col = "Ind3")) +
-  facet_wrap(~ID)
+  geom_point(aes(Model, Ind1, col = "% de trajets réels prédits")) + 
+  # geom_point(aes(Model, Ind2, col = "Ind2")) + 
+  geom_point(aes(Model, Ind3, col = "% de fausse alerts")) +
+  facet_wrap(~ID) +
+  labs(y = " Indicator") +
+  theme(legend.title = element_blank())
 
 
 

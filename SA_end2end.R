@@ -24,7 +24,7 @@ library(knitr)
 ### data preparation
 # load data
 # !!! to be replaced by: csv -> data.frame  
- load("VIP2.RData")
+# load("VIP2.RData")
 
 # get history for: CC,FF,NP,PC
 # from 2015-1-1 to 2015-5-28
@@ -35,6 +35,63 @@ library(knitr)
 #		test
 #	ID.list:	ID
 
+##########
+##########
+### ASF
+input <- read.table("Trajets_ASF.csv", sep = ";", header = TRUE)
+input <- tbl_df(input)
+
+names(input) <- c("ID", 
+									"pEntr", "sEntr", "cEntr", "nEntr",
+									"pSor", "sSor", "cSor", "nSor",
+									"D1", "D")
+
+input <- input %>% 
+					mutate(Entr = paste0(pEntr, sEntr, cEntr),
+								 Sor = paste0(pSor, sSor, cSor),
+								 Y = substr(D, 1, 4),
+								 M = substr(D, 5, 6),
+								 Day = substr(D, 7, 8),
+								 HH = as.numeric(substr(D, 9, 10)),
+								 MM = as.numeric(substr(D, 11, 12)),
+								 SS = as.numeric(substr(D, 13, 14)),
+								 Date = as.Date(paste0(Y, "-", M, "-", Day)),
+								 DOW = as.POSIXlt(Date)$wday,
+								 WOY = as.numeric(format(Date+3, "%U")),
+								 TimeSor = HH + MM / 60 + SS / 3600
+								 ) %>%
+					select(ID, Entr, Sor, Date, DOW, WOY, TimeSor)
+
+temp <- read.table("Trajets_hors_ASF.csv", sep = ";", header = TRUE)
+names(temp) <- c("ID", 
+									"pEntr", "sEntr", "cEntr", "nEntr",
+									"pSor", "sSor", "cSor", "nSor",
+									"D1", "D")
+temp <- temp %>% 
+					mutate(Entr = pEntr * 100000 + sEntr * 1000 + cEntr,
+								 Sor = pSor * 100000 + sSor * 1000 + cSor,
+								 Y = substr(D, 1, 4),
+								 M = substr(D, 5, 6),
+								 Day = substr(D, 7, 8),
+								 HH = as.numeric(substr(D, 9, 10)),
+								 MM = as.numeric(substr(D, 11, 12)),
+								 SS = as.numeric(substr(D, 13, 14)),
+								 Date = as.Date(paste0(Y, "-", M, "-", Day)),
+								 DOW = as.POSIXlt(Date)$wday,
+								 WOY = as.numeric(format(Date+3, "%U")),
+								 TimeSor = HH + MM / 60 + SS / 3600
+								 ) %>%
+					select(ID, Entr, Sor, Date, DOW, WOY, TimeSor)
+
+input.ASF <- rbind(input, temp)
+
+# ??? temporary
+input.ASF$ID <- "PM"
+input.ASF$TimeEntr <- 0
+
+##########
+##########
+### Escota
 ### from csv to data.frame to tbl
 input <- read.table("Tis_historique.csv", sep = ",", header = TRUE)
 input <- tbl_df(input)
@@ -43,49 +100,38 @@ names(input) <- c("pays", "ste", "ID", "badge",
                   "sEntr", "cEntr", "voieEntr", "DateEntr", "hEntr", 
                   "sSor", "cSor", "voieSor", "hSor", "DateSor")
 
-# badge
-input$Societe <- input$pays * 100 + input$ste
+input <- input %>%
+	mutate(Societe = pays * 100 + ste,
+				 Entr = 25000000 + sEntr * 1000 + cEntr,
+				 Sor = 25000000 + sSor * 1000 + cSor,
+				 Y = substr(DateSor, 1, 4),
+				 M = substr(DateSor, 5, 6),
+				 D = substr(DateSor, 7, 8),
+				 Date = as.Date(paste0(Y, "-", M, "-", D))
+	) %>%
+	select(Societe, ID, cEntr, Entr, Sor, voieSor, Date, hEntr, hSor)
 
-input$pays <- NULL
-input$ste <- NULL
+input <- input %>%
+  mutate(HH = as.numeric(substr(hEntr, 1, 2)),
+         MM = as.numeric(substr(hEntr, 3, 4)),
+         TimeEntr = HH + MM / 60,
+         DOW = as.POSIXlt(Date)$wday,
+         WOY = as.numeric(format(Date+3, "%U"))
+  ) %>%
+  select(Societe, ID, cEntr, Entr, Sor, voieSor, Date, DOW, WOY, TimeEntr, hSor) 
 
-# Cde for Entr & Sor
-input$Entr <- 25000000 + input$sEntr * 1000 + input$cEntr
-input$Sor <- 25000000 + input$sSor * 1000 + input$cSor
+input <- input %>%
+  mutate(HH = as.numeric(substr(hSor, 1, 2)),
+				 MM = as.numeric(substr(hSor, 3, 4)),
+				 TimeSor = HH + MM / 60
+	) %>%
+  select(Societe, ID, cEntr, Entr, Sor, voieSor, Date, DOW, WOY, TimeEntr, TimeSor) 
+
 input[input$cEntr == 0, ]$Entr <- 0 
-
-input$sEntr <- NULL
-input$cEntr <- NULL
-input$sSor <- NULL
-input$cSor <- NULL
-
-# DateSor
-input$Y <- substr(input$DateSor, 1, 4)
-input$M <- substr(input$DateSor, 5, 6)
-input$D <- substr(input$DateSor, 7, 8)
-input$Date <- as.Date(paste0(input$Y, "-", input$M, "-", input$D))
-
-input$Y <- NULL
-input$M <- NULL
-input$D <- NULL
-
-# HeureSor
-input$H <- substr(input$hSor, 1, 2)
-input$M <- substr(input$hSor, 3, 4)
-input$TimeSor <- as.numeric(input$H) + as.numeric(input$M) / 60 
-
-input$H <- substr(input$hEntr, 1, 2)
-input$M <- substr(input$hEntr, 3, 4)
-input$TimeEntr <- as.numeric(input$H) + as.numeric(input$M) / 60 
-
 input[is.na(input$TimeEntr), ]$TimeEntr <- input[is.na(input$TimeEntr), ]$TimeSor - .5 
-
-input$H <- NULL
-input$M <- NULL
 
 # Final
 Input <- input %>% select(Societe, ID, Entr, Sor, voieSor, Date, TimeEntr, TimeSor)
-Input$DOW <- as.POSIXlt(Input$Date)$wday 
 
 # get ID.ref
 ID.ref <- read.table("ID.ref.csv", sep = ",", header = TRUE)
@@ -94,7 +140,6 @@ ID.ref <- ID.ref %>% select(Nom, ID)
 
 # join Input & ID.ref
 Input <-  inner_join(Input, ID.ref)
-# print(count(Input, ID) %>% full_join(ID.ref), n = 22)
 
 # predefined parameters
 train.start <- as.Date("2015-1-1")
@@ -456,11 +501,11 @@ ind.model.12$Model <- 12
 #######
 # Create VIP2
 ####### 
-VIP2 <- VIP2[VIP2$ID %in% c("CC","FF", "NP", "PC") & VIP2$Date > as.Date("2014-12-31") & VIP2$Date < as.Date("2015-5-29"), ]
-x <- vector(mode = "integer", length = nrow(VIP2))
+temp <- VIP2[VIP2$ID %in% c("CC","FF", "NP", "PC") & VIP2$Date > as.Date("2014-12-31") & VIP2$Date < as.Date("2015-5-29"), ]
+x <- vector(mode = "integer", length = nrow(temp))
 
-VIP2 <- cbind(VIP2[,1:3],x,x,x,x,x,x,VIP2$TimeEntr,VIP2$TimeSor,VIP2$DOW,VIP2$WOY,VIP2$Date)
-colnames(VIP2)<- c(colnames(MODELE),"Date")
+temp <- cbind(temp[,1:3],x,x,x,x,x,x,temp$TimeEntr,temp$TimeSor,temp$DOW,temp$WOY,temp$Date)
+colnames(temp)<- c(colnames(MODELE),"Date")
 
 ######
 # predefined parameters
@@ -470,15 +515,11 @@ colnames(VIP2)<- c(colnames(MODELE),"Date")
 # test.period <- data.frame(Date = seq(test.start, test.end, "day"))
 # test.period$DOW <- as.POSIXlt(test.period$Date)$wday
 
-VIP2_pour_modele <- VIP2[VIP2$Date < as.Date("2015-5-1"),]
-VIP2_pour_test <- VIP2[VIP2$Date >= as.Date("2015-5-1"),]
+VIP2_pour_modele <- temp[temp$Date < as.Date("2015-5-1"),]
+VIP2_pour_test <- temp[temp$Date >= as.Date("2015-5-1"),]
 
 VIP2_decompose <- Decompose(VIP2_pour_modele)
 VIP2_pour_test_par_troncons <- Decompose(VIP2_pour_test)
-
-# get the ID list
-ID.list <- as.data.frame(VIP2_decompose %>% group_by(ID) %>% summarise())
-
 
 #######
 #COMPTAGE DES TRAJETS PAR TRONCON (PAR SENS ? PAS ENCORE)
@@ -644,13 +685,6 @@ ind.model.22 <- GetInd(test.model.22, result.model.22)
 ind.model.22$Model <- 22
 
 
-
-
-
-
-
-
-
 ##########
 ##########
 # compare model results
@@ -658,7 +692,8 @@ ind.model.22$Model <- 22
 Ind <- rbind(ind.model.00, ind.model.01, ind.model.02, 
 						 ind.model.10, ind.model.11, ind.model.12, 
 						 ind.model.20, ind.model.21, ind.model.22)
-Ind.result <- Ind %>% group_by(ID) %>% summarise(Model = sum(Model[Ind == max(Ind)]))
+
+Ind.result <- Ind %>% group_by(ID) %>% summarise(Model = Model[Ind == max(Ind)][1])
 
 result <- rbind(result.model.00, result.model.01, result.model.02, 
 								result.model.10, result.model.11, result.model.12,

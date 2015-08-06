@@ -1,8 +1,9 @@
 ##########
 ##########
+# SA_end2end.R
 # first: 20150723
 # last modified: 20150730
-# click button
+# 1-click
 
 ##########
 ##########
@@ -35,112 +36,6 @@ library(knitr)
 #		test
 #	ID.list:	ID
 
-##########
-##########
-### ASF
-input <- read.table("Trajets_ASF.csv", sep = ";", header = TRUE)
-input <- tbl_df(input)
-
-names(input) <- c("ID", 
-									"pEntr", "sEntr", "cEntr", "nEntr",
-									"pSor", "sSor", "cSor", "nSor",
-									"D1", "D")
-
-input <- input %>% 
-					mutate(Entr = paste0(pEntr, sEntr, cEntr),
-								 Sor = paste0(pSor, sSor, cSor),
-								 Y = substr(D, 1, 4),
-								 M = substr(D, 5, 6),
-								 Day = substr(D, 7, 8),
-								 HH = as.numeric(substr(D, 9, 10)),
-								 MM = as.numeric(substr(D, 11, 12)),
-								 SS = as.numeric(substr(D, 13, 14)),
-								 Date = as.Date(paste0(Y, "-", M, "-", Day)),
-								 DOW = as.POSIXlt(Date)$wday,
-								 WOY = as.numeric(format(Date+3, "%U")),
-								 TimeSor = HH + MM / 60 + SS / 3600
-								 ) %>%
-					select(ID, Entr, Sor, Date, DOW, WOY, TimeSor)
-
-temp <- read.table("Trajets_hors_ASF.csv", sep = ";", header = TRUE)
-names(temp) <- c("ID", 
-									"pEntr", "sEntr", "cEntr", "nEntr",
-									"pSor", "sSor", "cSor", "nSor",
-									"D1", "D")
-temp <- temp %>% 
-					mutate(Entr = pEntr * 100000 + sEntr * 1000 + cEntr,
-								 Sor = pSor * 100000 + sSor * 1000 + cSor,
-								 Y = substr(D, 1, 4),
-								 M = substr(D, 5, 6),
-								 Day = substr(D, 7, 8),
-								 HH = as.numeric(substr(D, 9, 10)),
-								 MM = as.numeric(substr(D, 11, 12)),
-								 SS = as.numeric(substr(D, 13, 14)),
-								 Date = as.Date(paste0(Y, "-", M, "-", Day)),
-								 DOW = as.POSIXlt(Date)$wday,
-								 WOY = as.numeric(format(Date+3, "%U")),
-								 TimeSor = HH + MM / 60 + SS / 3600
-								 ) %>%
-					select(ID, Entr, Sor, Date, DOW, WOY, TimeSor)
-
-input.ASF <- rbind(input, temp)
-
-# ??? temporary
-input.ASF$ID <- "PM"
-input.ASF$TimeEntr <- 0
-
-##########
-##########
-### Escota
-### from csv to data.frame to tbl
-input <- read.table("Tis_historique.csv", sep = ",", header = TRUE)
-input <- tbl_df(input)
-
-names(input) <- c("pays", "ste", "ID", "badge", 
-                  "sEntr", "cEntr", "voieEntr", "DateEntr", "hEntr", 
-                  "sSor", "cSor", "voieSor", "hSor", "DateSor")
-
-input <- input %>%
-	mutate(Societe = pays * 100 + ste,
-				 Entr = 25000000 + sEntr * 1000 + cEntr,
-				 Sor = 25000000 + sSor * 1000 + cSor,
-				 Y = substr(DateSor, 1, 4),
-				 M = substr(DateSor, 5, 6),
-				 D = substr(DateSor, 7, 8),
-				 Date = as.Date(paste0(Y, "-", M, "-", D))
-	) %>%
-	select(Societe, ID, cEntr, Entr, Sor, voieSor, Date, hEntr, hSor)
-
-input <- input %>%
-  mutate(HH = as.numeric(substr(hEntr, 1, 2)),
-         MM = as.numeric(substr(hEntr, 3, 4)),
-         TimeEntr = HH + MM / 60,
-         DOW = as.POSIXlt(Date)$wday,
-         WOY = as.numeric(format(Date+3, "%U"))
-  ) %>%
-  select(Societe, ID, cEntr, Entr, Sor, voieSor, Date, DOW, WOY, TimeEntr, hSor) 
-
-input <- input %>%
-  mutate(HH = as.numeric(substr(hSor, 1, 2)),
-				 MM = as.numeric(substr(hSor, 3, 4)),
-				 TimeSor = HH + MM / 60
-	) %>%
-  select(Societe, ID, cEntr, Entr, Sor, voieSor, Date, DOW, WOY, TimeEntr, TimeSor) 
-
-input[input$cEntr == 0, ]$Entr <- 0 
-input[is.na(input$TimeEntr), ]$TimeEntr <- input[is.na(input$TimeEntr), ]$TimeSor - .5 
-
-# Final
-Input <- input %>% select(Societe, ID, Entr, Sor, voieSor, Date, TimeEntr, TimeSor)
-
-# get ID.ref
-ID.ref <- read.table("ID.ref.csv", sep = ",", header = TRUE)
-names(ID.ref)[c(1,3,6)] <- c("Nom", "NOM", "ID")
-ID.ref <- ID.ref %>% select(Nom, ID)
-
-# join Input & ID.ref
-Input <-  inner_join(Input, ID.ref)
-
 # predefined parameters
 train.start <- as.Date("2015-1-1")
 test.start <- as.Date("2015-5-1")
@@ -157,8 +52,9 @@ trx <- trx[, -c(9:13)]
 trx <- trx %>% filter(DOW < 7)
 
 # ??? add PM into trx
-temp <- input.ASF %>% filter(Date >= train.start & Date < test.end)
-trx <- rbind(trx, temp)
+PM$ID <- "PM"
+PM <- PM %>% select(ID, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor)
+trx <- rbind(trx, PM)
 
 # construct train & test set
 train <- trx %>% filter(Date < test.start)

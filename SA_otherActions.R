@@ -1,34 +1,45 @@
-# load("Troncons_A789.RData")
-# load("A7_par_pk.RData")
-# load("A8_par_pk.RData")
-# load("A9_par_pk.RData")
-# load("Troncons_A7.RData")
-# load("Troncons_A8.RData")
-# load("Troncons_A9.RData")
-# gares <- read.table("garesLatLng.csv", header = T, sep = ",")
-# load("MODELE.RData")
-
-# remove unuseful data set after Rmd
-rm(centers1, centers2, cl1, cl2, gg1, gg2, within.ss, t.kmeans)
-rm(T.matin, T.aprem)
-rm(i,j,clus)
-rm(T, temp)
 ##########
+##########
+# SA_otherActions.R
+# first: 20150723
+# other actions
 
 ##########
-### PM
-input.ASF %>% group_by(ID) %>% summarize(minD = min(Date), maxD = max(Date), n = n())
+##########
+### Major steps
+# Test
+#   First data view
+#   Result Visualisation
+# Reserve code
+#   Initialisation
 
-input.ASF %>%
-	group_by(Entr, Sor) %>%
-	summarize(n = n()) %>%
-	ungroup() %>%
-	arrange(desc(n))
 
-#
+##########
+##########
+### Test
+##########
+##########
+###   First data viewPM
+ggplot(PM) + 
+  geom_point(aes(Date,TimeEntr, shape="Entr", col=as.factor(Societe))) +
+  geom_point(aes(Date,TimeSor, shape="Sor", col=as.factor(Societe))) +
+  geom_segment(aes(x=Date, xend=Date, y=TimeEntr, yend=TimeSor))
+  
 
-full_join(count(Input, ID), ID.ref)
-print(full_join(count(Input, ID), ID.ref), n = 21)
+ggplot(PM) + geom_bar(aes(TimeSor, binwidth = 1))
+
+PM.LngLat <- GetLngLat(PM)
+ggplot(PM.LngLat) + 
+  geom_point(aes(ELng, ELat, col = "Entr")) +
+  geom_point(aes(SLng, SLat, col = "Sor")) +
+  geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat))
+
+# Overview of Vincent's data
+input.escota %>%
+  group_by(Nom) %>%
+  summarize(Dmin = min(Date), Dmax = max(Date), n = n()) %>%
+  ungroup() %>%
+  arrange(desc(n))
 
 
 ##########
@@ -46,6 +57,9 @@ ggplot(train_decompose.LngLat) +
   geom_point(aes(SLng, SLat, col = "Sor")) +
   geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) 
 
+##########
+##########
+###   Result Visualisation
 
 ##########
 # viz Ind
@@ -59,7 +73,8 @@ ggplot(Ind) +
 
 ##########
 # viz: test result
-ggplot(test_decompose) + geom_point(aes(Date, TimeSor, col = as.factor(result))) + facet_wrap(~ID) + ggtitle("Test Result")
+temp <- test.model.00 %>% filter(ID == "PM")
+ggplot(temp) + geom_point(aes(Date, TimeSor, col = as.factor(result))) + facet_wrap(~ID) + ggtitle("Test Result")
 
 ##########
 # viz: trian result - prepare
@@ -82,35 +97,91 @@ ggplot(VIP2) + geom_point(aes(Date, TimeSor)) + facet_wrap(~ID) + ggtitle("VIP2"
 
 ##########
 # viz: result
-ggplot(result) + 
+ggplot(result.final) + 
   geom_point(aes(DOW, Tmin, col = "Tmin")) +
   geom_point(aes(DOW, Tmax, col = "Tmax")) +
   geom_segment(aes(x=DOW, xend=DOW, y=Tmin, yend=Tmax)) +
-  facet_grid(ID~Model) + ggtitle("Result: Time Interval by DOW")
+  facet_wrap(~ID) + ggtitle("Result: Time Interval by DOW")
 
+result.final %>% filter(ID == "NP")
+result.final %>% filter(ID == "PC")
 
-##########
-# get the number of cluster
-temp <- trx
-ggplot(temp) + geom_point(aes(Date, TimeSor, shape = as.factor(DOW))) + facet_wrap(~ID)
+print(result.final %>% filter(ID == "CC") %>%
+  group_by(DOW, Tmin, Tmax) %>%
+  summarise(Emin = min(Entr), Emax = max(Entr), Smin =min(Sor), Smax = max(Sor)), n = 35)
 
-clus<- clusGap(temp[,"TimeSor"], kmeans, 10)
-clus
-with(clus,maxSE(Tab[,"gap"],Tab[,"SE.sim"]))
-plot(clus)
-
-
-
-  
-
-
+print(result.final %>% filter(ID == "FF") %>%
+        group_by(Tmin, Tmax) %>%
+        summarise(Emin = min(Entr), Emax = max(Entr), Smin =min(Sor), Smax = max(Sor)), n = 35)
 
 ##########
 ##########
-# OLD
+### Reserve
 ##########
 ##########
-  
+#   Initialisation
+# load("Troncons_A789.RData")
+# load("A7_par_pk.RData")
+# load("A8_par_pk.RData")
+# load("A9_par_pk.RData")
+# load("Troncons_A7.RData")
+# load("Troncons_A8.RData")
+# load("Troncons_A9.RData")
+# gares <- read.table("garesLatLng.csv", header = T, sep = ",")
+# load("MODELE.RData")
+
+# remove unuseful data set after Rmd
+rm(centers1, centers2, cl1, cl2, gg1, gg2, within.ss, t.kmeans)
+rm(T.matin, T.aprem)
+rm(i,j,clus)
+rm(T, temp)
+
+##########
+##########
+### data preparation
+### ASF
+input <- read.table("BDD_ASF_1.csv", sep = ";", header = TRUE)
+input <- tbl_df(input)
+
+names(input) <- c("ID", 
+                  "pEntr", "sEntr", "cEntr", "nEntr",
+                  "pSor", "sSor", "cSor", "nSor",
+                  "D1", "D")
+
+input <- input %>% 
+  mutate(
+    Entr = pEntr * 100000 + sEntr * 1000 + cEntr,
+    Sor = pSor * 100000 + sSor * 1000 + cSor,
+    Y = substr(D, 1, 4), M = substr(D, 5, 6),Day = substr(D, 7, 8),
+    Date = as.Date(paste0(Y, "-", M, "-", Day)),
+    DOW = as.POSIXlt(Date)$wday,
+    WOY = as.numeric(format(Date+3, "%U")),
+    HH = as.numeric(substr(D, 9, 10)), MM = as.numeric(substr(D, 11, 12)),
+    TimeSor = HH + MM / 60
+  ) %>%
+  select(ID, Entr, Sor, Date, DOW, WOY, TimeSor)
+
+temp <- read.table("BDD_ASF_0.csv", sep = ";", header = TRUE)
+names(temp) <- c("ID", 
+                 "pEntr", "sEntr", "cEntr", "nEntr",
+                 "pSor", "sSor", "cSor", "nSor",
+                 "D1", "D")
+temp <- temp %>% 
+  mutate(
+    Entr = pEntr * 100000 + sEntr * 1000 + cEntr,
+    Sor = pSor * 100000 + sSor * 1000 + cSor,
+    Y = substr(D, 1, 4), M = substr(D, 5, 6),Day = substr(D, 7, 8),
+    Date = as.Date(paste0(Y, "-", M, "-", Day)),
+    DOW = as.POSIXlt(Date)$wday,
+    WOY = as.numeric(format(Date+3, "%U")),
+    HH = as.numeric(substr(D, 9, 10)), MM = as.numeric(substr(D, 11, 12)),
+    TimeSor = HH + MM / 60
+  ) %>%
+  select(ID, Entr, Sor, Date, DOW, WOY, TimeSor)
+
+input.ASF <- rbind(input, temp)
+
+
 ##########
 # model02: Benchmark - consider DOW
 ##########
@@ -157,103 +228,7 @@ for (i in 1:nrow(result)){
     "result"]<-1
 }
 
-  
-##########
-# get Ind1, Ind2
-test.result.model0 <- test0 %>%
-  group_by(ID) %>%
-  summarise(Tpos = sum(result[result == 1]), Fneg = n() - Tpos, Ind1 = Tpos/(Tpos+Fneg), Ind2 = Fneg/(Tpos+Fneg) )
-	
-# ##########
-# # get Ind3
-#
-# test.period <- data.frame(Date = seq(as.Date("2015-5-1"), as.Date("2015-5-28"), "day"))
-# test.period$DOW <- as.POSIXlt(test.period$Date)$wday
-#
-# temp <- result.model1
-# temp$DOW <- as.numeric(temp$DOW)
-# temp <- inner_join(test.period, temp, by="DOW")
-# temp$Mark <- 0
-#
-# # temp$DOW <- as.character(temp$DOW)
-# for(i in 1:nrow(test_decompose)){
-#   temp[
-#     temp$ID   == test_decompose$ID[i] &
-#     temp$Entr == test_decompose$Entr[i] &
-#     temp$Sor  == test_decompose$Sor[i] &
-#     temp$Date  == test_decompose$Date[i] &
-#     temp$Tmin <= test_decompose$TimeSor[i]&
-#     temp$Tmax >= test_decompose$TimeSor[i],
-#     "Mark"]<-1
-# }
-# count(temp,Mark)
-# m1<-temp
-#
-# for(i in 1:nrow(temp)){
-#   for(j in 1:nrow(test_decompose)){
-#     if(temp$ID[i]   == test_decompose$ID[j] &
-#        temp$Entr[i] == test_decompose$Entr[j] &
-#        temp$Sor[i]  == test_decompose$Sor[j] &
-#        temp$Date[i] == test_decompose$Date[j] &
-#        temp$Tmax[i] >= test_decompose$TimeSor[j] &
-#        temp$Tmin[i] <= test_decompose$TimeSor[j]) {
-#       temp$Mark[i] <- temp$Mark[i] + 1
-#       break # end for loop
-#     } # next trx in real
-#   } # next trx predicted
-# }
-# m2<-temp
-#
-# temp.ind <- temp %>%
-#   filter(Mark == 0)
-# group_by(ID) %>%
-#   summarize(Fpos = n())
-
-# get Ind3
-temp <- result.model0
-temp$DOW <- as.numeric(temp$DOW)
-temp <- inner_join(test.period, temp, by="DOW")
-temp$Mark <- 0
-
-# temp$DOW <- as.character(temp$DOW)
-for(i in 1:nrow(test0)){
-  temp[
-    temp$ID   == test0$ID[i] &
-      temp$Entr == test0$Entr[i] &
-      temp$Sor  == test0$Sor[i] &
-      temp$Date  == test0$Date[i] &
-      temp$Tmin <= test0$TimeSor[i]&
-      temp$Tmax >= test0$TimeSor[i],
-    "Mark"]<-1
-}
-
-Ind3 <- temp %>% group_by(ID) %>% summarise(nMark = sum(Mark[Mark==1]), t = (n() - nMark), Ind3 = t/ n() )
-
-# get the final indicator
-test.result.model0$Ind <- test.result.model0$Ind1 - test.result.model0$Ind2 / 15
-test.result.model0 <- test.result.model0[, c(1, ncol(test.result.model0))]
-test.result.model0$Model <- 02	
-   
-
-##########
-##########
-# model.12: Time-Space - consider DOW
-# get indicators
-test_result <- test_decompose %>%
-  group_by(ID) %>%
-  summarise(Tpos = sum(result[result == 1]), Fneg = n() - Tpos, Ind1 = Tpos/(Tpos+Fneg), Ind2 = Fneg/(Tpos+Fneg) )
-
-# get the final indicator
-test_result$Ind <- test_result$Ind1 - test_result$Ind2 / 15
-test.result.model1 <- test_result[, c(1, ncol(test_result))]
-test.result.model1$Model <- 1
-
-##########
-##########
-# final step
-Ind <- rbind(test.result.model0, test.result.model1)
-
-
+ 
 
 
 ##########
@@ -539,13 +514,7 @@ Decompose <- function(transaction){
 	  Pointeur <- Pointeur + 1
 	}
 	
-	
-	
-	
-	
-	
-	
-	
+
 	
   transaction_par_troncons$Date <- as.Date(as.numeric(transaction_par_troncons$Date), origin = as.Date("1970-1-1"))
   transaction_par_troncons$TimeEntr <- as.numeric(transaction_par_troncons$TimeEntr)

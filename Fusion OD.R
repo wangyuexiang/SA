@@ -1,7 +1,7 @@
 #Objectif : fusionner les OD du type de Claire :
 #Tout OD sortant à Lancon et suivi dans l'heure et 30min suivante d'une entrée à La Barque -> Fusion en une seule OD
 #Avec les bons temps et infos complémentaires. (Temps d'entrée de l'OD XX -> Lancon, temps de sortie du trajet la Barque -> XXX)
-#Idem dans l'autre sens bien sûr.
+#Idem dans l'autre sens bien sûr. test
 
 
 fusion_OD <- function ( Transactions) {
